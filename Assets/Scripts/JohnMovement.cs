@@ -6,96 +6,131 @@ using UnityEngine;
 
 public class JohnMovement : MonoBehaviour
 {
-    public GameObject BulletPrefab;
+    public GameObject   BulletPrefab;
     private Rigidbody2D RigidBody;
-    private Animator Animator;
+    private Animator    Animator;
 
-    private float horizontal;
-    private bool grounded;
-    private bool movementXY;
+    private float   horizontal;
+    private bool    grounded;
+    private bool    flyMode;
 
     public float jumpForce;
     public float speed;
     public float movementSpeed;
+    
     void Start()
     {
-      RigidBody = GetComponent<Rigidbody2D>();
-      Animator  = GetComponent<Animator>();
-      grounded  = false;
-      movementXY = false;
+      RigidBody     = GetComponent<Rigidbody2D>();
+      Animator      = GetComponent<Animator>();
+      grounded      = false;
+      flyMode       = false;
       movementSpeed = 1000.0f;
     }
 
-    // Update is called once per frame
+    
     void Update()
     {
+        // Update is called once per frame on game
         horizontal = Input.GetAxisRaw("Horizontal");
-
-        if(horizontal < 0.0f){
-            transform.localScale = new Vector3(-1.0f, 1.0f, 1.0f);
-        } else if(horizontal > 0.0f){
-            transform.localScale = new Vector3(1.0f, 1.0f, 1.0f);
+            
+        if(PlayerIsRunning(horizontal)){
+            Animator.SetBool("running",true);
+        } else {
+            Animator.SetBool("running",false);
         }
-
-        Animator.SetBool("running",horizontal != 0.0f);
-        Debug.DrawRay(transform.position, Vector3.down*0.1f, Color.red);
-        if(Physics2D.Raycast(transform.position, Vector3.down, 0.1f)){
+       
+        if(PlayerIsGrounded()){
             grounded = true;
-            movementXY =false;
+            flyMode =false;
         } else {
             grounded = false;
         }
-
-        if(movementXY == true){
-            Vector2 targetVelocity = new Vector2(Input.GetAxisRaw("Horizontal"), Input.GetAxisRaw("Vertical"));
-            MoveXY(targetVelocity);
+        
+        if(Input.GetKeyDown(KeyCode.Q) && Input.GetKeyDown(KeyCode.E) && grounded == false){
+            flyMode = !flyMode;
+        }
+        
+        if(flyMode == true){
+            Fly(new Vector2(Input.GetAxisRaw("Horizontal"), Input.GetAxisRaw("Vertical")));
         }
 
-        if(Input.GetKeyDown(KeyCode.W) && grounded){
-            Jump();
-        }        
+        if(Input.GetKeyDown(KeyCode.A)){
+            transform.localScale = new Vector3(-1.0f, 1.0f, 1.0f);
+        }
 
-        if(Input.GetKeyDown(KeyCode.Q) && grounded == false){
-            movementXY = true;
-        }  
+        if(Input.GetKeyDown(KeyCode.W)){
+            if(grounded){
+                Jump();
+            }
+        }
+
+        if(Input.GetKeyDown(KeyCode.D)){
+            transform.localScale = new Vector3(1.0f, 1.0f, 1.0f);
+        }
+
+        if(Input.GetKeyDown(KeyCode.S)){
+            Crunch();
+            if(Input.GetKeyDown(KeyCode.A)){
+                Dash();
+               
+            } else if(Input.GetKeyDown(KeyCode.D)){
+                Dash();
+
+            }
+        }
+
+        if(Input.GetKeyDown(KeyCode.F)){
+            Melee();
+        }
 
         if(Input.GetKeyDown(KeyCode.Space)){
             Shoot();
         }
+
+
     }
 
-     // Update for Physics
     private void FixedUpdate(){
+        // Update for Physics repeats 60 times (max frames) per second
         RigidBody.velocity = new Vector2(horizontal * speed, RigidBody.velocity.y);
     }
 
-    void MoveXY(Vector2 targetVelocity){        
-        RigidBody.velocity = (targetVelocity * movementSpeed) * Time.deltaTime; // Multiply the target by deltaTime to make movement speed consistent across different framerates
+    private bool PlayerIsRunning(float direction){
+        return direction != 0.0f;
+    }
+    private bool PlayerIsGrounded(){
+        // Check if player is grounded
+        //Debug.DrawRay(transform.position, Vector3.down*0.1f, Color.red);
+        return Physics2D.Raycast(transform.position, Vector3.down, 0.1f);
     }
 
     /*  Player actions */
     private void Jump(){
+        Debug.Log("Jump");
        RigidBody.AddForce(Vector2.up * jumpForce);
     }
 
     private void Melee(){
-
+         Debug.Log("Melee");
     }
 
-    private void Fly(){
-
+    private void Fly(Vector2 targetVelocity){
+         Debug.Log("Fly");
+         // Multiply the target by deltaTime to make movement speed consistent across different framerates
+         RigidBody.velocity = (targetVelocity * movementSpeed) * Time.deltaTime; 
     }
 
     private void Crunch(){
-
+        Debug.Log("Crunch");
     }
 
     private void Dash(){
-
+         Debug.Log("Dash");
+          Animator.SetBool("dash",true);
     }
 
     private void Shoot(){
-        GameObject bullet = Instantiate(BulletPrefab, transform.position, Quaternion.identity);
+         Debug.Log("Shot");
     }
 
    

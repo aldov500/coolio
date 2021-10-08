@@ -3030,8 +3030,10 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 9c03ca6e646f5da418943e256dc4866c, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  BulletPrefab: {fileID: 0}
   jumpForce: 120
   speed: 1
+  movementSpeed: 0
 --- !u!95 &1755776414
 Animator:
   serializedVersion: 3
