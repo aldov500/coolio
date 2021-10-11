@@ -3,9 +3,10 @@ using System.Collections.Generic;
 using UnityEngine;
 
 [RequireComponent(typeof(Rigidbody2D))]
+[RequireComponent(typeof(Animator))]
 
-public class JohnMovement : MonoBehaviour
-{
+public class JohnMovement : MonoBehaviour{
+
     public GameObject   BulletPrefab;
     private Rigidbody2D RigidBody;
     private Animator    Animator;
@@ -14,31 +15,53 @@ public class JohnMovement : MonoBehaviour
     private bool    grounded;
     private bool    flyMode;
 
+    private string jumpAnimation;
+    private string runAnimation;
+    private string dashAnimation;
+    private string crunchAnimation;
+
     public float jumpForce;
     public float speed;
     public float movementSpeed;
+
+    private bool movLeft;
+    private bool movRight;
+    private bool movUp;
+    private bool movDown;
     
-    void Start()
-    {
-      RigidBody     = GetComponent<Rigidbody2D>();
-      Animator      = GetComponent<Animator>();
-      grounded      = false;
-      flyMode       = false;
-      movementSpeed = 1000.0f;
+    void Start(){
+        RigidBody       = GetComponent<Rigidbody2D>();
+        Animator        = GetComponent<Animator>();
+        movementSpeed   = 1000.0f;
+
+        jumpAnimation   = "jump";
+        runAnimation    = "running";
+        dashAnimation   = "dash";
+        crunchAnimation = "crunch";
+
     }
 
-    
-    void Update()
-    {
+    void Update(){
         // Update is called once per frame on game
+        ControlPlayer();
+    }
+
+
+    private void FixedUpdate(){
+        // Update for Physics repeats 60 times (max frames) per second
+        RigidBody.velocity = new Vector2(horizontal * speed, RigidBody.velocity.y);
+    }
+
+    private void ControlPlayer(){
+        
+        AnimatorCleanFlags();
+
         horizontal = Input.GetAxisRaw("Horizontal");
-            
+        
         if(PlayerIsRunning(horizontal)){
             Animator.SetBool("running",true);
-        } else {
-            Animator.SetBool("running",false);
         }
-       
+
         if(PlayerIsGrounded()){
             grounded = true;
             flyMode =false;
@@ -56,6 +79,7 @@ public class JohnMovement : MonoBehaviour
 
         if(Input.GetKeyDown(KeyCode.A)){
             transform.localScale = new Vector3(-1.0f, 1.0f, 1.0f);
+            
         }
 
         if(Input.GetKeyDown(KeyCode.W)){
@@ -69,6 +93,7 @@ public class JohnMovement : MonoBehaviour
         }
 
         if(Input.GetKeyDown(KeyCode.S)){
+            Animator.SetBool(crunchAnimation, true);
             Crunch();
             if(Input.GetKeyDown(KeyCode.A)){
                 Dash();
@@ -86,13 +111,6 @@ public class JohnMovement : MonoBehaviour
         if(Input.GetKeyDown(KeyCode.Space)){
             Shoot();
         }
-
-
-    }
-
-    private void FixedUpdate(){
-        // Update for Physics repeats 60 times (max frames) per second
-        RigidBody.velocity = new Vector2(horizontal * speed, RigidBody.velocity.y);
     }
 
     private bool PlayerIsRunning(float direction){
@@ -104,10 +122,18 @@ public class JohnMovement : MonoBehaviour
         return Physics2D.Raycast(transform.position, Vector3.down, 0.1f);
     }
 
+    private void AnimatorCleanFlags(){
+        Animator.SetBool(jumpAnimation, false);
+        Animator.SetBool(runAnimation, false);
+        Animator.SetBool(dashAnimation, false);
+        Animator.SetBool(crunchAnimation, false);
+    }
     /*  Player actions */
     private void Jump(){
         Debug.Log("Jump");
-       RigidBody.AddForce(Vector2.up * jumpForce);
+        Animator.SetBool("jump", true);
+        RigidBody.AddForce(Vector2.up * jumpForce);
+        
     }
 
     private void Melee(){
@@ -125,13 +151,13 @@ public class JohnMovement : MonoBehaviour
     }
 
     private void Dash(){
-         Debug.Log("Dash");
-          Animator.SetBool("dash",true);
+        Debug.Log("Dash");
+        Animator.SetBool("dash",true);
+        RigidBody.AddForce(Vector3.right * jumpForce * 10);
     }
 
     private void Shoot(){
          Debug.Log("Shot");
     }
 
-   
 }
